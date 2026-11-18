@@ -1,4 +1,7 @@
-## Plant Care Tracker
+## Title: Plant Care Tracker
+
+# Problem
+The problem is that two roommates are uncoordinated when caring for their plants. 
 
 # Goals
 
@@ -9,6 +12,8 @@ G3: Track Sunlight Exposure (G3.1 Track when plants are moved outside, G3.2 iden
 G4: Coordinate Shared Plant Care (G4.1 Maintain shared care records, G4.2 Avoid duplicate or missed care activities)
 
 
+
+# Requirements
 
 # Plants
 R1: A user can add a plant with a name and location
