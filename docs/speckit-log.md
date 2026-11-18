@@ -67,3 +67,11 @@ Input:
 - Key design decisions: status derived from events (never stored), acting-member cookie for
   one-tap actions, server-side duplicate-watering check at submit time, 60 s dashboard refresh.
 - Constitution Check: all five principles pass, before and after design.
+
+## 6. `/speckit-tasks`
+
+Input: none (generated from plan.md, spec.md, data-model.md, contracts/, research.md).
+
+- Artifact: `specs/001-plant-care-tracker/tasks.md`: 35 tasks in 7 phases (Setup, Foundational,
+  US1–US4, Polish). Test tasks included because Constitution Principle V requires them.
+- Coverage check: every FR-001–FR-026 maps to at least one task.
