@@ -31,9 +31,9 @@ Single project: `src/plant_tracker/`, `tests/` at the repository root (see plan.
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create `pyproject.toml` (uv project, Python ≥3.11, Flask 3.x, pytest dev dependency, `plant-tracker` script entry, src layout) and `.gitignore` (`.venv/`, `__pycache__/`, `instance/`, `*.db`)
-- [ ] T002 Create package skeleton: `src/plant_tracker/__init__.py` with `create_app(config=None)` factory reading `PLANT_TRACKER_DB`, `PLANT_TRACKER_TZ`, and a `CLOCK` callable; `src/plant_tracker/__main__.py` serving on `0.0.0.0:$PORT` (default 8000)
-- [ ] T003 [P] Create `tests/conftest.py` with fixtures: `app` (temp DB file, frozen clock that tests can move), `client`, and helpers to create members/plants
+- [X] T001 Create `pyproject.toml` (uv project, Python ≥3.11, Flask 3.x, pytest dev dependency, `plant-tracker` script entry, src layout) and `.gitignore` (`.venv/`, `__pycache__/`, `instance/`, `*.db`)
+- [X] T002 Create package skeleton: `src/plant_tracker/__init__.py` with `create_app(config=None)` factory reading `PLANT_TRACKER_DB`, `PLANT_TRACKER_TZ`, and a `CLOCK` callable; `src/plant_tracker/__main__.py` serving on `0.0.0.0:$PORT` (default 8000)
+- [X] T003 [P] Create `tests/conftest.py` with fixtures: `app` (temp DB file, frozen clock that tests can move), `client`, and helpers to create members/plants
 
 **Checkpoint**: `uv sync` and `uv run pytest` succeed (no tests yet).
 
