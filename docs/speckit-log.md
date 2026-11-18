@@ -26,3 +26,17 @@ Input:
 > app usable from a phone.
 
 - Artifact: `.specify/memory/constitution.md` (v1.0.0)
+
+## 3. `/speckit-specify`
+
+Input:
+
+> Build the Shared Household Plant Care Tracker described in `docs/initial-spec.md` (goals G2,
+> G3, G4 with supporting G1 requirements R1–R19), using the stakeholder interview and goal model
+> as context. Focus on what and why, not how.
+
+- Artifacts: `specs/001-plant-care-tracker/spec.md`, `specs/001-plant-care-tracker/checklists/requirements.md`
+- Changes from the manual spec: user stories with Given/When/Then scenarios, edge cases
+  (simultaneous watering, back-dating, day boundaries), household members as an entity, removing
+  plants and deleting mistaken events, measurable success criteria, and a Goal → R# → FR
+  traceability table.
