@@ -54,3 +54,16 @@ Four questions, answered with the recommended option (see `## Clarifications` in
 4. Outside-but-not-overdue plants → shown on the dashboard as the least urgent group.
 
 - Spec Quality Checklist: 16/16 → 16/16 passing.
+
+## 5. `/speckit-plan`
+
+Input:
+
+> Python 3.11+ with uv. Flask with server-rendered Jinja templates, standard-library sqlite3 in a
+> single file, no ORM, no JS framework, no auth. Keep status rules in pure functions that take
+> the current time. pytest for tests. Must work from both roommates' phones on the home network.
+
+- Artifacts: `plan.md`, `research.md`, `data-model.md`, `contracts/routes.md`, `quickstart.md`
+- Key design decisions: status derived from events (never stored), acting-member cookie for
+  one-tap actions, server-side duplicate-watering check at submit time, 60 s dashboard refresh.
+- Constitution Check: all five principles pass, before and after design.
