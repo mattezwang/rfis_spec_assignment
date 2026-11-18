@@ -68,15 +68,15 @@ the clock, and confirm each status (spec US1 scenarios 1–6).
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T011 [P] [US1] Unit tests for `watering_status()` in `tests/unit/test_care.py`: never, ok with days until due, due today, overdue with day count, calendar-day boundary (watered 21:00 on a 1-day interval → due next day), interval edit recalculates, latest of several waterings wins, back-dated watering older than latest ignored for "last"
-- [ ] T012 [P] [US1] Integration tests in `tests/integration/test_us1_watering.py`: add plant → never watered; record watering → last watered by member + next due; advance clock → due today, overdue; edit interval → next due changes; back-dated watering; future time rejected; invalid plant fields rejected with 400; delete plant with confirmation
+- [X] T011 [P] [US1] Unit tests for `watering_status()` in `tests/unit/test_care.py`: never, ok with days until due, due today, overdue with day count, calendar-day boundary (watered 21:00 on a 1-day interval → due next day), interval edit recalculates, latest of several waterings wins, back-dated watering older than latest ignored for "last"
+- [X] T012 [P] [US1] Integration tests in `tests/integration/test_us1_watering.py`: add plant → never watered; record watering → last watered by member + next due; advance clock → due today, overdue; edit interval → next due changes; back-dated watering; future time rejected; invalid plant fields rejected with 400; delete plant with confirmation
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Implement `WateringStatus` and `watering_status(plant, last_watering, today, tz)` in `src/plant_tracker/care.py` per data-model.md "WateringStatus"
-- [ ] T014 [US1] Implement plant and watering queries in `src/plant_tracker/db.py`: create / get / list / update / delete plant (validate `plant.name`, `plant.location`, `plant.water_interval_days`, `plant.max_outside_hours` per data-model.md); insert care event (`care_event.kind`, `care_event.occurred_at`, `care_event.member_id` per data-model.md); latest event of a kind per plant
-- [ ] T015 [US1] Implement routes in `src/plant_tracker/web.py`: `GET /plants`, `GET /plants/new`, `POST /plants`, `GET /plants/<id>`, `GET/POST /plants/<id>/edit`, `GET/POST /plants/<id>/delete`, `POST /plants/<id>/water` (member resolution, optional `occurred_at`, future rejected; duplicate warning comes in US4) per contracts/routes.md
-- [ ] T016 [P] [US1] Create templates `plant_form.html`, `plants.html`, `plant_detail.html` (watering status, last watered by whom, watering form with member select and optional time), `confirm_delete.html` in `src/plant_tracker/templates/`
+- [X] T013 [US1] Implement `WateringStatus` and `watering_status(plant, last_watering, today, tz)` in `src/plant_tracker/care.py` per data-model.md "WateringStatus"
+- [X] T014 [US1] Implement plant and watering queries in `src/plant_tracker/db.py`: create / get / list / update / delete plant (validate `plant.name`, `plant.location`, `plant.water_interval_days`, `plant.max_outside_hours` per data-model.md); insert care event (`care_event.kind`, `care_event.occurred_at`, `care_event.member_id` per data-model.md); latest event of a kind per plant
+- [X] T015 [US1] Implement routes in `src/plant_tracker/web.py`: `GET /plants`, `GET /plants/new`, `POST /plants`, `GET /plants/<id>`, `GET/POST /plants/<id>/edit`, `GET/POST /plants/<id>/delete`, `POST /plants/<id>/water` (member resolution, optional `occurred_at`, future rejected; duplicate warning comes in US4) per contracts/routes.md
+- [X] T016 [P] [US1] Create templates `plant_form.html`, `plants.html`, `plant_detail.html` (watering status, last watered by whom, watering form with member select and optional time), `confirm_delete.html` in `src/plant_tracker/templates/`
 
 **Checkpoint**: US1 works on its own; MVP can be demonstrated.
 

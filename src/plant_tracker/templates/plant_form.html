@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit ' ~ plant.name if plant else 'Add a plant' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Edit ' ~ plant.name if plant else 'Add a plant' }}</h1>
+<form class="card stack" method="post" action="{{ url_for('web.edit_plant', plant_id=plant.id) if plant else url_for('web.create_plant') }}">
+  <div>
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name" value="{{ form.name or '' }}" maxlength="60" required autofocus placeholder="e.g. Monstera">
+  </div>
+  <div>
+    <label for="location">Where it lives</label>
+    <input type="text" id="location" name="location" value="{{ form.location or '' }}" maxlength="60" required placeholder="e.g. Living room window">
+  </div>
+  <div class="row">
+    <div>
+      <label for="water_interval_days">Water every <span class="hint">(days)</span></label>
+      <input type="number" id="water_interval_days" name="water_interval_days" value="{{ form.water_interval_days or '' }}" min="1" max="365" step="1" required inputmode="numeric" placeholder="7">
+    </div>
+    <div>
+      <label for="max_outside_hours">Max time outside <span class="hint">(hours)</span></label>
+      <input type="number" id="max_outside_hours" name="max_outside_hours" value="{{ form.max_outside_hours or '' }}" min="0.01" max="72" step="any" required inputmode="decimal" placeholder="2">
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn" type="submit">{{ 'Save changes' if plant else 'Add plant' }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('web.plant_detail', plant_id=plant.id) if plant else url_for('web.plants') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

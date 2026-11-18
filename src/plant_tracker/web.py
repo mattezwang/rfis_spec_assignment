@@ -2,24 +2,34 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from flask import (
     Blueprint,
     Flask,
+    abort,
     current_app,
     flash,
     g,
-    make_response,
     redirect,
     render_template,
     request,
     url_for,
 )
 
-from . import db, timeutil
+from . import care, db, timeutil
 
 bp = Blueprint("web", __name__)
 
 ACTING_COOKIE = "acting_member"
+
+# CSS badge class per watering state (style.css .badge-*)
+WATER_BADGE = {
+    care.NEVER: "never_watered",
+    care.OK: "ok",
+    care.DUE_TODAY: "due_today",
+    care.OVERDUE: "overdue_water",
+}
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 
@@ -80,6 +90,8 @@ def register_template_helpers(app: Flask) -> None:
             "fmt_date": lambda d: timeutil.format_date(d, timeutil.local_date(current_now, tz())),
             "local_input_value": lambda dt: timeutil.datetime_local_value(dt, tz()),
             "plural": timeutil.plural,
+            "fmt_hours": lambda h: f"{h:g} hour" if h == 1 else f"{h:g} hours",
+            "water_badge": WATER_BADGE.get,
             "has_plants_page": "web.plants" in current_app.view_functions,
         }
 
@@ -178,12 +190,154 @@ def set_acting_member():
     return set_acting_cookie(redirect(safe_next(url_for("web.dashboard"))), member["id"])
 
 
+# --------------------------------------------------------------------------- plant status
+
+
+@dataclass
+class PlantView:
+    """A plant with its events and derived status, for templates."""
+
+    plant: object
+    events: list
+    watering: care.WateringStatus
+
+    @property
+    def id(self) -> int:
+        return self.plant["id"]
+
+
+def build_views(plants) -> list[PlantView]:
+    events = db.events_by_plant([p["id"] for p in plants])
+    current, zone = now(), tz()
+    views = []
+    for p in plants:
+        evs = events.get(p["id"], [])
+        views.append(
+            PlantView(
+                plant=p,
+                events=evs,
+                watering=care.watering_status(p["water_interval_days"], evs, current, zone),
+            )
+        )
+    return views
+
+
+def get_view_or_404(plant_id: int) -> PlantView:
+    plant = db.get_plant(plant_id)
+    if plant is None:
+        abort(404)
+    return build_views([plant])[0]
+
+
+def render_plant(plant_id: int, error: str | None = None, status: int = 200):
+    view = get_view_or_404(plant_id)
+    return render_template("plant_detail.html", v=view, error=error), status
+
+
+def parse_occurred_at():
+    """Optional `occurred_at` (local datetime-local value); default now; never in the future."""
+    raw = (request.form.get("occurred_at") or "").strip()
+    current = now()
+    if not raw:
+        return current
+    try:
+        when = timeutil.parse_local_datetime(raw, tz())
+    except ValueError as exc:
+        raise db.ValidationError(str(exc)) from None
+    if timeutil.is_future(when, current):
+        raise db.ValidationError("That time is in the future. Care can only be recorded after it happens.")
+    return when
+
+
+def member_or_choose(default_next: str):
+    """Return (member, None) or (None, redirect-to-choose-member)."""
+    member = resolve_member()
+    if member is None:
+        return None, redirect(url_for("web.choose_member", next=safe_next(default_next)))
+    return member, None
+
+
 # --------------------------------------------------------------------------- dashboard
 
 
 @bp.get("/")
 def dashboard():
     return render_template("dashboard.html")
+
+
+# --------------------------------------------------------------------------- plants (US1)
+
+
+@bp.get("/plants")
+def plants():
+    return render_template("plants.html", views=build_views(db.list_plants()))
+
+
+@bp.route("/plants/new", methods=["GET"])
+def new_plant():
+    return render_template("plant_form.html", plant=None, form={})
+
+
+@bp.post("/plants")
+def create_plant():
+    try:
+        fields = db.clean_plant(request.form)
+    except db.ValidationError as exc:
+        return render_template("plant_form.html", plant=None, form=request.form, error=str(exc)), 400
+    plant_id = db.create_plant(fields)
+    flash(f"Added {fields['name']}.")
+    return redirect(url_for("web.plant_detail", plant_id=plant_id))
+
+
+@bp.get("/plants/<int:plant_id>")
+def plant_detail(plant_id: int):
+    return render_plant(plant_id)
+
+
+@bp.route("/plants/<int:plant_id>/edit", methods=["GET", "POST"])
+def edit_plant(plant_id: int):
+    plant = db.get_plant(plant_id)
+    if plant is None:
+        abort(404)
+    if request.method == "GET":
+        return render_template("plant_form.html", plant=plant, form=plant)
+    try:
+        fields = db.clean_plant(request.form)
+    except db.ValidationError as exc:
+        return render_template("plant_form.html", plant=plant, form=request.form, error=str(exc)), 400
+    db.update_plant(plant_id, fields)
+    flash("Saved changes.")
+    return redirect(url_for("web.plant_detail", plant_id=plant_id))
+
+
+@bp.route("/plants/<int:plant_id>/delete", methods=["GET", "POST"])
+def delete_plant(plant_id: int):
+    plant = db.get_plant(plant_id)
+    if plant is None:
+        abort(404)
+    if request.method == "GET":
+        return render_template("confirm_delete.html", plant=plant)
+    db.delete_plant(plant_id)
+    flash(f"Removed {plant['name']}.")
+    return redirect(url_for("web.plants"))
+
+
+# --------------------------------------------------------------------------- care events
+
+
+@bp.post("/plants/<int:plant_id>/water")
+def water(plant_id: int):
+    view = get_view_or_404(plant_id)
+    member, choose = member_or_choose(url_for("web.plant_detail", plant_id=plant_id))
+    if choose:
+        return choose
+    try:
+        when = parse_occurred_at()
+    except db.ValidationError as exc:
+        return render_plant(plant_id, error=str(exc), status=400)
+    db.add_event(plant_id, member["id"], care.WATERED, when)
+    flash(f"{member['name']} watered {view.plant['name']}.")
+    return redirect(safe_next(url_for("web.plant_detail", plant_id=plant_id)))
 
 
 @bp.app_errorhandler(404)

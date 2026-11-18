@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Plants{% endblock %}
+{% block content %}
+<div class="row" style="align-items:center">
+  <h1>Plants</h1>
+  <div style="flex:0 0 auto"><a class="btn" href="{{ url_for('web.new_plant') }}">+ Add plant</a></div>
+</div>
+{% if not views %}
+<div class="card empty">
+  <p>No plants yet.</p>
+  <a class="btn" href="{{ url_for('web.new_plant') }}">Add your first plant</a>
+</div>
+{% else %}
+<ul class="list">
+  {% for v in views %}
+  <li class="item">
+    <div class="item-main">
+      <div class="item-title"><a href="{{ url_for('web.plant_detail', plant_id=v.id) }}">{{ v.plant.name }}</a></div>
+      <div class="muted small">{{ v.plant.location }} · every {{ plural(v.plant.water_interval_days, 'day') }}</div>
+      <div class="small">
+        <span class="badge badge-{{ water_badge(v.watering.state) }}">{{ v.watering.label }}</span>
+        {% if v.watering.last %}<span class="muted">Last watered {{ fmt_when(v.watering.last.occurred_at) }} by {{ v.watering.last.member_name }}</span>{% endif %}
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

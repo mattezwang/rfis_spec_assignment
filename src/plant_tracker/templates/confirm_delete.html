@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Remove {{ plant.name }}{% endblock %}
+{% block content %}
+<h1>Remove {{ plant.name }}?</h1>
+<div class="card">
+  <p>This removes <strong>{{ plant.name }}</strong> ({{ plant.location }}) and all of its care history for everyone in the household. This can't be undone.</p>
+  <form class="actions" method="post" action="{{ url_for('web.delete_plant', plant_id=plant.id) }}">
+    <button class="btn btn-danger" type="submit">Remove {{ plant.name }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('web.plant_detail', plant_id=plant.id) }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

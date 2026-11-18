@@ -145,3 +145,128 @@ def delete_member(member_id: int) -> None:
         )
     conn.execute("DELETE FROM member WHERE id = ?", (member_id,))
     conn.commit()
+
+
+# --------------------------------------------------------------------------- plants
+
+
+def _clean_text(raw: str | None, label: str) -> str:
+    """data-model.md plant.name / plant.location: required, trimmed, 1-60 chars."""
+    value = (raw or "").strip()
+    if not value:
+        raise ValidationError(f"Please enter a {label}.")
+    if len(value) > PLANT_TEXT_MAX:
+        raise ValidationError(f"The {label} can be at most {PLANT_TEXT_MAX} characters.")
+    return value
+
+
+def clean_plant(form) -> dict:
+    """Validate plant fields per data-model.md; raise ValidationError with a friendly message."""
+    name = _clean_text(form.get("name"), "plant name")
+    location = _clean_text(form.get("location"), "location")
+
+    raw_interval = (form.get("water_interval_days") or "").strip()
+    if not raw_interval.isdigit() or int(raw_interval) < 1:
+        raise ValidationError("Watering interval must be a whole number of days, at least 1.")
+    interval = int(raw_interval)
+    if interval > 365:
+        raise ValidationError("Watering interval can be at most 365 days.")
+
+    raw_hours = (form.get("max_outside_hours") or "").strip()
+    try:
+        hours = float(raw_hours)
+    except ValueError:
+        raise ValidationError("Time outside must be a number of hours, like 2 or 1.5.") from None
+    if not (0 < hours <= MAX_OUTSIDE_HOURS):  # also rejects NaN
+        raise ValidationError(
+            f"Time outside must be more than 0 and at most {MAX_OUTSIDE_HOURS} hours."
+        )
+
+    return {
+        "name": name,
+        "location": location,
+        "water_interval_days": interval,
+        "max_outside_hours": hours,
+    }
+
+
+def create_plant(fields: dict) -> int:
+    conn = get_db()
+    cur = conn.execute(
+        """INSERT INTO plant (name, location, water_interval_days, max_outside_hours, created_at)
+           VALUES (:name, :location, :water_interval_days, :max_outside_hours, :created_at)""",
+        {**fields, "created_at": _now_iso()},
+    )
+    conn.commit()
+    return cur.lastrowid
+
+
+def update_plant(plant_id: int, fields: dict) -> None:
+    conn = get_db()
+    conn.execute(
+        """UPDATE plant SET name = :name, location = :location,
+               water_interval_days = :water_interval_days, max_outside_hours = :max_outside_hours
+           WHERE id = :id""",
+        {**fields, "id": plant_id},
+    )
+    conn.commit()
+
+
+def delete_plant(plant_id: int) -> None:
+    conn = get_db()
+    conn.execute("DELETE FROM plant WHERE id = ?", (plant_id,))
+    conn.commit()
+
+
+def get_plant(plant_id: int):
+    return get_db().execute("SELECT * FROM plant WHERE id = ?", (plant_id,)).fetchone()
+
+
+def list_plants():
+    return get_db().execute("SELECT * FROM plant ORDER BY name COLLATE NOCASE, id").fetchall()
+
+
+# --------------------------------------------------------------------------- care events
+
+
+def add_event(plant_id: int, member_id: int, kind: str, occurred_at) -> int:
+    """Insert a care event (data-model.md care_event.kind / occurred_at / member_id)."""
+    from .timeutil import to_iso
+
+    conn = get_db()
+    cur = conn.execute(
+        """INSERT INTO care_event (plant_id, member_id, kind, occurred_at, recorded_at)
+           VALUES (?, ?, ?, ?, ?)""",
+        (plant_id, member_id, kind, to_iso(occurred_at), _now_iso()),
+    )
+    conn.commit()
+    return cur.lastrowid
+
+
+def events_by_plant(plant_ids: list[int] | None = None) -> dict[int, list]:
+    """All care events grouped by plant, newest first, as care.Event objects."""
+    from .care import Event
+    from .timeutil import from_iso
+
+    sql = """SELECT e.id, e.plant_id, e.kind, e.occurred_at, e.member_id, m.name AS member_name
+             FROM care_event e JOIN member m ON m.id = e.member_id"""
+    params: tuple = ()
+    if plant_ids is not None:
+        if not plant_ids:
+            return {}
+        sql += f" WHERE e.plant_id IN ({','.join('?' * len(plant_ids))})"
+        params = tuple(plant_ids)
+    sql += " ORDER BY e.occurred_at DESC, e.id DESC"
+
+    grouped: dict[int, list] = {}
+    for row in get_db().execute(sql, params):
+        grouped.setdefault(row["plant_id"], []).append(
+            Event(
+                kind=row["kind"],
+                occurred_at=from_iso(row["occurred_at"]),
+                member_name=row["member_name"],
+                id=row["id"],
+                member_id=row["member_id"],
+            )
+        )
+    return grouped

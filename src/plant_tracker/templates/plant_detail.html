@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% set p = v.plant %}
+{% set w = v.watering %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block content %}
+<h1>{{ p.name }}</h1>
+<p class="muted">{{ p.location }} · Every {{ plural(p.water_interval_days, 'day') }} · Max {{ fmt_hours(p.max_outside_hours) }} outside
+  · <a href="{{ url_for('web.edit_plant', plant_id=p.id) }}">Edit</a></p>
+
+<div class="status-grid">
+  <section class="card" aria-labelledby="water-h">
+    <h2 id="water-h">💧 Watering</h2>
+    <p><span class="badge badge-{{ water_badge(w.state) }}">{{ w.label }}</span></p>
+    {% if w.last %}
+    <p>Last watered <strong>{{ fmt_when(w.last.occurred_at) }}</strong> by <strong>{{ w.last.member_name }}</strong></p>
+    <p>Next due <strong>{{ fmt_date(w.next_due) }}</strong></p>
+    {% else %}
+    <p class="muted">No watering recorded yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card" aria-labelledby="record-h">
+  <h2 id="record-h">Record care</h2>
+  <form class="stack" method="post" action="{{ url_for('web.water', plant_id=p.id) }}">
+    <input type="hidden" name="next" value="{{ url_for('web.plant_detail', plant_id=p.id) }}">
+    <div class="row">
+      <div>
+        <label for="member_id">Who</label>
+        <select id="member_id" name="member_id" required>
+          {% if not acting_member %}<option value="" selected disabled>choose…</option>{% endif %}
+          {% for m in all_members %}
+          <option value="{{ m.id }}" {% if acting_member and acting_member.id == m.id %}selected{% endif %}>{{ m.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="occurred_at">When <span class="hint">(leave blank for now)</span></label>
+        <input type="datetime-local" id="occurred_at" name="occurred_at">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" type="submit">💧 Record watering</button>
+    </div>
+  </form>
+</section>
+
+<p class="actions"><a class="btn btn-small btn-ghost" href="{{ url_for('web.delete_plant', plant_id=p.id) }}">Remove plant…</a></p>
+{% endblock %}
