@@ -7,6 +7,7 @@ in care.py and never written here (research.md R-3).
 from __future__ import annotations
 
 import sqlite3
+from contextlib import contextmanager
 
 from flask import Flask, current_app, g
 
@@ -55,6 +56,20 @@ def get_db() -> sqlite3.Connection:
         conn.execute("PRAGMA foreign_keys = ON")
         g.db = conn
     return g.db
+
+
+@contextmanager
+def write_lock():
+    """Hold SQLite's write lock while checking current state and recording an event, so two
+    roommates submitting at the same moment are serialized (spec edge case: simultaneous
+    watering). Rolls back if the block exits without committing."""
+    conn = get_db()
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        yield conn
+    finally:
+        if conn.in_transaction:
+            conn.rollback()
 
 
 def close_db(_exc=None) -> None:

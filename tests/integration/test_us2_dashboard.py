@@ -28,8 +28,9 @@ def test_attention_order_and_labels(household, clock):
 
     dashboard(household)  # consume "X watered Y" flash messages
     html = dashboard(household)
-    assert html.index("Fern") < html.index("Basil") < html.index("Pothos")
-    assert "Cactus" not in html
+    attention = html.split("Move a plant outside")[0]  # the needs-attention groups
+    assert attention.index("Fern") < attention.index("Basil") < attention.index("Pothos")
+    assert "Cactus" not in attention
     assert "Overdue by 3 days" in html
     assert "Never watered" in html
     assert "Due today" in html

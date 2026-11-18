@@ -70,6 +70,13 @@ def format_when(dt: datetime, now: datetime, tz: tzinfo | None) -> str:
     return f"{local.strftime('%a %b')} {local.day} {hhmm}"
 
 
+def format_short(dt: datetime, now: datetime, tz: tzinfo | None) -> str:
+    """Just the clock time if it is today, otherwise the friendly timestamp."""
+    if local_date(dt, tz) == local_date(now, tz):
+        return format_time(dt, tz)
+    return format_when(dt, now, tz)
+
+
 def format_date(d: date, today: date) -> str:
     """Friendly local date: 'today', 'tomorrow', 'yesterday', 'Mon Nov 17'."""
     days = (d - today).days

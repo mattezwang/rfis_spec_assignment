@@ -19,7 +19,11 @@
       <div class="muted small">{{ v.plant.location }} · every {{ plural(v.plant.water_interval_days, 'day') }}</div>
       <div class="small">
         <span class="badge badge-{{ water_badge(v.watering.state) }}">{{ v.watering.label }}</span>
-        {% if v.watering.last %}<span class="muted">Last watered {{ fmt_when(v.watering.last.occurred_at) }} by {{ v.watering.last.member_name }}</span>{% endif %}
+        {% if v.sun.is_outside %}<span class="badge badge-{{ sun_badge(v.sun.state) }}">{{ v.sun.label }} · in by {{ fmt_short(v.sun.bring_in_by) }}</span>{% endif %}
+      </div>
+      <div class="small muted">
+        {% if v.watering.last %}Last watered {{ fmt_when(v.watering.last.occurred_at) }} by {{ v.watering.last.member_name }}.{% endif %}
+        {% if v.sun.last_moved_outside %}Last outside {{ fmt_when(v.sun.last_moved_outside.occurred_at) }} by {{ v.sun.last_moved_outside.member_name }}.{% endif %}
       </div>
     </div>
   </li>

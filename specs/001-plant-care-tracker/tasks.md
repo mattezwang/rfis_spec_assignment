@@ -116,14 +116,14 @@ the limit, confirm overdue, bring it inside, confirm the marks are cleared (spec
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T022 [P] [US3] Unit tests for `sun_status()` and sun dashboard groups in `tests/unit/test_care.py`: inside with no events, outside with bring-in-by, overdue after limit, brought inside clears, limit edit recalculates, fractional hours, overdue-inside ranks above overdue-water, outside ranks last
-- [ ] T023 [P] [US3] Integration tests in `tests/integration/test_us3_sunlight.py`: move outside shows member and bring-in-by; second move outside rejected (400); bring inside when inside rejected; bring-inside time before move-outside rejected; overdue after clock moves; bring inside clears; dashboard groups and Bring inside button
+- [X] T022 [P] [US3] Unit tests for `sun_status()` and sun dashboard groups in `tests/unit/test_care.py`: inside with no events, outside with bring-in-by, overdue after limit, brought inside clears, limit edit recalculates, fractional hours, overdue-inside ranks above overdue-water, outside ranks last
+- [X] T023 [P] [US3] Integration tests in `tests/integration/test_us3_sunlight.py`: move outside shows member and bring-in-by; second move outside rejected (400); bring inside when inside rejected; bring-inside time before move-outside rejected; overdue after clock moves; bring inside clears; dashboard groups and Bring inside button
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Implement `SunStatus` and `sun_status(plant, latest_sun_event, last_moved_outside, now)` in `src/plant_tracker/care.py` per data-model.md "SunStatus", and extend `dashboard_items()` with `overdue_inside` and `outside` groups
-- [ ] T025 [US3] Add sun queries in `src/plant_tracker/db.py` (latest sun event, last moved outside per plant) and routes `POST /plants/<id>/outside`, `POST /plants/<id>/inside` in `src/plant_tracker/web.py` enforcing the `care_event.kind` / `care_event.occurred_at` recording rules in data-model.md (FR-016)
-- [ ] T026 [US3] Update `plant_detail.html`, `plants.html`, `dashboard.html` with sun state, last moved outside by whom, bring-in-by, and Move outside / Bring inside actions
+- [X] T024 [US3] Implement `SunStatus` and `sun_status(plant, latest_sun_event, last_moved_outside, now)` in `src/plant_tracker/care.py` per data-model.md "SunStatus", and extend `dashboard_items()` with `overdue_inside` and `outside` groups
+- [X] T025 [US3] Add sun queries in `src/plant_tracker/db.py` (latest sun event, last moved outside per plant) and routes `POST /plants/<id>/outside`, `POST /plants/<id>/inside` in `src/plant_tracker/web.py` enforcing the `care_event.kind` / `care_event.occurred_at` recording rules in data-model.md (FR-016)
+- [X] T026 [US3] Update `plant_detail.html`, `plants.html`, `dashboard.html` with sun state, last moved outside by whom, bring-in-by, and Move outside / Bring inside actions
 
 **Checkpoint**: US1–US3 work.
 

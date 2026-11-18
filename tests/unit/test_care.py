@@ -146,3 +146,122 @@ class TestDashboard:
         assert care.dashboard_items(plants) == []
         assert care.next_upcoming(plants).name == "Sooner"
         assert care.next_upcoming([]) is None
+
+
+# --------------------------------------------------------------------------- US3 sunlight
+
+
+def ev(kind, when, who="Sam", id=None):
+    return Event(kind=kind, occurred_at=when, member_name=who, id=id)
+
+
+class TestSunStatus:
+    def test_inside_with_no_events(self):
+        s = care.sun_status(3, [], at(2026, 11, 10))
+        assert s.state == care.INSIDE and not s.is_outside
+        assert s.bring_in_by is None and s.last_moved_outside is None
+
+    def test_outside_with_bring_in_by(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        s = care.sun_status(3, events, at(2026, 11, 10, 12))
+        assert s.state == care.OUTSIDE and s.is_outside
+        assert s.bring_in_by == at(2026, 11, 10, 13)
+        assert s.out_event.member_name == "Sam"
+
+    def test_exactly_at_limit_is_not_yet_overdue(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        assert care.sun_status(3, events, at(2026, 11, 10, 13)).state == care.OUTSIDE
+
+    def test_overdue_after_limit_and_persists(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        assert care.sun_status(3, events, at(2026, 11, 10, 13, 1)).state == care.OVERDUE_INSIDE
+        assert care.sun_status(3, events, at(2026, 11, 12, 9)).state == care.OVERDUE_INSIDE
+
+    def test_brought_inside_clears(self):
+        events = [
+            ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10)),
+            ev(care.BROUGHT_INSIDE, at(2026, 11, 10, 14), "Alex"),
+        ]
+        s = care.sun_status(3, events, at(2026, 11, 10, 15))
+        assert s.state == care.INSIDE and s.bring_in_by is None
+        assert s.last_moved_outside.member_name == "Sam"  # still shown (FR-018)
+        assert s.last_brought_inside.member_name == "Alex"
+
+    def test_limit_edit_recalculates(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        now = at(2026, 11, 10, 12)
+        assert care.sun_status(3, events, now).state == care.OUTSIDE
+        assert care.sun_status(1, events, now).state == care.OVERDUE_INSIDE
+
+    def test_fractional_hours(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        assert care.sun_status(1.5, events, at(2026, 11, 10, 12)).bring_in_by == at(2026, 11, 10, 11, 30)
+
+    def test_watering_does_not_affect_sun(self):
+        events = [watered(at(2026, 11, 10, 11)), ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        assert care.sun_status(3, events, at(2026, 11, 10, 12)).state == care.OUTSIDE
+
+
+class TestSunEventRules:
+    def test_cannot_move_outside_twice(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        err = care.sun_event_error(care.MOVED_OUTSIDE, 3, events, at(2026, 11, 10, 11), at(2026, 11, 10, 11))
+        assert "already outside" in err
+
+    def test_cannot_bring_inside_when_inside(self):
+        err = care.sun_event_error(care.BROUGHT_INSIDE, 3, [], at(2026, 11, 10, 11), at(2026, 11, 10, 11))
+        assert "already inside" in err
+
+    def test_bring_inside_not_before_moved_outside(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        err = care.sun_event_error(care.BROUGHT_INSIDE, 3, events, at(2026, 11, 10, 9), at(2026, 11, 10, 11))
+        assert "before it went outside" in err
+
+    def test_move_outside_not_before_last_brought_inside(self):
+        events = [
+            ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10)),
+            ev(care.BROUGHT_INSIDE, at(2026, 11, 10, 12)),
+        ]
+        err = care.sun_event_error(care.MOVED_OUTSIDE, 3, events, at(2026, 11, 10, 11), at(2026, 11, 10, 13))
+        assert "brought inside" in err
+
+    def test_valid_events(self):
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 10, 10))]
+        assert care.sun_event_error(care.BROUGHT_INSIDE, 3, events, at(2026, 11, 10, 11), at(2026, 11, 10, 11)) is None
+        assert care.sun_event_error(care.MOVED_OUTSIDE, 3, [], at(2026, 11, 10, 11), at(2026, 11, 10, 11)) is None
+
+
+class TestSunDashboard:
+    def test_overdue_inside_first_outside_last(self):
+        now = at(2026, 11, 20, 12)
+        fine_water = [watered(at(2026, 11, 19))]
+        out_late = fine_water + [ev(care.MOVED_OUTSIDE, at(2026, 11, 20, 8))]
+        out_ok = fine_water + [ev(care.MOVED_OUTSIDE, at(2026, 11, 20, 11))]
+        plants = [
+            status(1, "Sunny", 7, out_ok, now, sun=care.sun_status(3, out_ok, now)),
+            status(2, "Thirsty", 7, [watered(at(2026, 11, 10))], now, sun=care.sun_status(3, [], now)),
+            status(3, "Forgotten", 7, out_late, now, sun=care.sun_status(2, out_late, now)),
+        ]
+        items = care.dashboard_items(plants)
+        assert [(i.group, i.plant.name) for i in items] == [
+            (care.G_OVERDUE_INSIDE, "Forgotten"),
+            (care.G_OVERDUE_WATER, "Thirsty"),
+            (care.G_OUTSIDE, "Sunny"),
+        ]
+        assert items[0].action == care.ACTION_INSIDE
+
+    def test_plant_can_appear_in_two_groups(self):
+        now = at(2026, 11, 20, 12)
+        events = [ev(care.MOVED_OUTSIDE, at(2026, 11, 20, 11))]
+        p = status(1, "Basil", 2, events, now, sun=care.sun_status(3, events, now))
+        assert [i.group for i in care.dashboard_items([p])] == [care.G_NEVER_WATERED, care.G_OUTSIDE]
+
+    def test_outside_sorted_by_bring_in_by(self):
+        now = at(2026, 11, 20, 12)
+        a = [watered(at(2026, 11, 19)), ev(care.MOVED_OUTSIDE, at(2026, 11, 20, 11))]
+        b = [watered(at(2026, 11, 19)), ev(care.MOVED_OUTSIDE, at(2026, 11, 20, 11, 30))]
+        plants = [
+            status(1, "A-later", 7, a, now, sun=care.sun_status(5, a, now)),
+            status(2, "B-sooner", 7, b, now, sun=care.sun_status(1, b, now)),
+        ]
+        assert [i.plant.name for i in care.dashboard_items(plants)] == ["B-sooner", "A-later"]

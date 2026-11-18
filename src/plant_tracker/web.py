@@ -30,6 +30,11 @@ WATER_BADGE = {
     care.DUE_TODAY: "due_today",
     care.OVERDUE: "overdue_water",
 }
+SUN_BADGE = {
+    care.INSIDE: "ok",
+    care.OUTSIDE: "outside",
+    care.OVERDUE_INSIDE: "overdue_inside",
+}
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 
@@ -87,11 +92,13 @@ def register_template_helpers(app: Flask) -> None:
             "all_members": db.list_members() if db.count_members() else [],
             "fmt_when": lambda dt: timeutil.format_when(dt, current_now, tz()),
             "fmt_time": lambda dt: timeutil.format_time(dt, tz()),
+            "fmt_short": lambda dt: timeutil.format_short(dt, current_now, tz()),
             "fmt_date": lambda d: timeutil.format_date(d, timeutil.local_date(current_now, tz())),
             "local_input_value": lambda dt: timeutil.datetime_local_value(dt, tz()),
             "plural": timeutil.plural,
             "fmt_hours": lambda h: f"{h:g} hour" if h == 1 else f"{h:g} hours",
             "water_badge": WATER_BADGE.get,
+            "sun_badge": SUN_BADGE.get,
             "has_plants_page": "web.plants" in current_app.view_functions,
         }
 
@@ -209,6 +216,10 @@ class PlantView:
     def watering(self) -> care.WateringStatus:
         return self.status.watering
 
+    @property
+    def sun(self) -> care.SunStatus:
+        return self.status.sun
+
 
 def build_views(plants) -> list[PlantView]:
     events = db.events_by_plant([p["id"] for p in plants])
@@ -221,6 +232,7 @@ def build_views(plants) -> list[PlantView]:
             name=p["name"],
             location=p["location"],
             watering=care.watering_status(p["water_interval_days"], evs, current, zone),
+            sun=care.sun_status(p["max_outside_hours"], evs, current),
         )
         views.append(PlantView(plant=p, events=evs, status=status))
     return views
@@ -275,6 +287,7 @@ def dashboard():
         groups=groups,
         plant_count=len(views),
         upcoming=care.next_upcoming(statuses),
+        inside_plants=[v for v in views if not v.sun.is_outside],
     )
 
 
@@ -340,17 +353,50 @@ def delete_plant(plant_id: int):
 
 @bp.post("/plants/<int:plant_id>/water")
 def water(plant_id: int):
-    view = get_view_or_404(plant_id)
-    member, choose = member_or_choose(url_for("web.plant_detail", plant_id=plant_id))
-    if choose:
-        return choose
-    try:
-        when = parse_occurred_at()
-    except db.ValidationError as exc:
-        return render_plant(plant_id, error=str(exc), status=400)
-    db.add_event(plant_id, member["id"], care.WATERED, when)
+    """FR-008: record a watering."""
+    detail_url = url_for("web.plant_detail", plant_id=plant_id)
+    with db.write_lock():
+        view = get_view_or_404(plant_id)
+        member, choose = member_or_choose(detail_url)
+        if choose:
+            return choose
+        try:
+            when = parse_occurred_at()
+        except db.ValidationError as exc:
+            return render_plant(plant_id, error=str(exc), status=400)
+        db.add_event(plant_id, member["id"], care.WATERED, when)
     flash(f"{member['name']} watered {view.plant['name']}.")
-    return redirect(safe_next(url_for("web.plant_detail", plant_id=plant_id)))
+    return redirect(safe_next(detail_url))
+
+
+def record_sun_event(plant_id: int, kind: str, done_message: str):
+    """FR-012/FR-015/FR-016: record moved outside or brought inside, enforcing the sequence."""
+    detail_url = url_for("web.plant_detail", plant_id=plant_id)
+    with db.write_lock():
+        view = get_view_or_404(plant_id)
+        member, choose = member_or_choose(detail_url)
+        if choose:
+            return choose
+        try:
+            when = parse_occurred_at()
+        except db.ValidationError as exc:
+            return render_plant(plant_id, error=str(exc), status=400)
+        error = care.sun_event_error(kind, view.plant["max_outside_hours"], view.events, when, now())
+        if error:
+            return render_plant(plant_id, error=error, status=400)
+        db.add_event(plant_id, member["id"], kind, when)
+    flash(done_message.format(member=member["name"], plant=view.plant["name"]))
+    return redirect(safe_next(detail_url))
+
+
+@bp.post("/plants/<int:plant_id>/outside")
+def move_outside(plant_id: int):
+    return record_sun_event(plant_id, care.MOVED_OUTSIDE, "{member} moved {plant} outside.")
+
+
+@bp.post("/plants/<int:plant_id>/inside")
+def bring_inside(plant_id: int):
+    return record_sun_event(plant_id, care.BROUGHT_INSIDE, "{member} brought {plant} inside.")
 
 
 @bp.app_errorhandler(404)

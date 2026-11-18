@@ -32,6 +32,9 @@
           {% if item.action == 'water' %}
             <span class="badge badge-{{ group.key }}">{{ p.watering.label }}</span>
             {% if p.watering.last %}<span class="muted">Last watered {{ fmt_when(p.watering.last.occurred_at) }} by {{ p.watering.last.member_name }}</span>{% endif %}
+          {% else %}
+            <span class="badge badge-{{ group.key }}">{% if p.sun.state == 'overdue_inside' %}Was due in at {{ fmt_short(p.sun.bring_in_by) }}{% else %}Bring in by {{ fmt_short(p.sun.bring_in_by) }}{% endif %}</span>
+            <span class="muted">Outside since {{ fmt_short(p.sun.out_event.occurred_at) }} ({{ p.sun.out_event.member_name }})</span>
           {% endif %}
         </div>
       </div>
@@ -41,6 +44,11 @@
           <input type="hidden" name="next" value="/">
           <button class="btn" type="submit">💧 Water</button>
         </form>
+        {% else %}
+        <form method="post" action="{{ url_for('web.bring_inside', plant_id=p.id) }}">
+          <input type="hidden" name="next" value="/">
+          <button class="btn btn-sun" type="submit">🏠 Bring inside</button>
+        </form>
         {% endif %}
       </div>
     </li>
@@ -48,6 +56,28 @@
   </ul>
 </section>
 {% endfor %}
+
+{% if inside_plants %}
+<details class="card">
+  <summary><strong>☀️ Move a plant outside</strong> <span class="muted small">({{ inside_plants|length }} inside)</span></summary>
+  <ul class="list">
+    {% for v in inside_plants %}
+    <li class="item">
+      <div class="item-main">
+        <div class="item-title"><a href="{{ url_for('web.plant_detail', plant_id=v.id) }}">{{ v.plant.name }}</a></div>
+        <div class="muted small">{{ v.plant.location }} · max {{ fmt_hours(v.plant.max_outside_hours) }} outside</div>
+      </div>
+      <div class="item-actions">
+        <form method="post" action="{{ url_for('web.move_outside', plant_id=v.id) }}">
+          <input type="hidden" name="next" value="/">
+          <button class="btn btn-sun btn-small" type="submit">☀️ Move outside</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
 
 {% if plant_count %}
 <p class="muted small">Recording as <strong>{{ acting_member.name if acting_member else 'nobody yet' }}</strong>. This page refreshes every minute so you see your roommate's updates.

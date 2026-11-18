@@ -95,6 +95,73 @@ def watering_status(
     return WateringStatus(OK, last, next_due, days_until_due=(next_due - today).days)
 
 
+# --------------------------------------------------------------------------- sunlight (G3)
+
+# Sun states
+INSIDE = "inside"
+OUTSIDE = "outside"
+OVERDUE_INSIDE = "overdue_inside"
+
+
+@dataclass(frozen=True)
+class SunStatus:
+    state: str
+    out_event: Event | None  # the current outing, when outside
+    bring_in_by: datetime | None
+    last_moved_outside: Event | None  # shown even when inside (FR-018)
+    last_brought_inside: Event | None
+
+    @property
+    def is_outside(self) -> bool:
+        return self.state in (OUTSIDE, OVERDUE_INSIDE)
+
+    @property
+    def label(self) -> str:
+        return {INSIDE: "Inside", OUTSIDE: "Outside", OVERDUE_INSIDE: "Overdue to bring inside"}[
+            self.state
+        ]
+
+
+def sun_status(max_outside_hours: float, events: Iterable[Event], now: datetime) -> SunStatus:
+    """FR-013/FR-014: outside or inside, bring-in-by time, and overdue-to-bring-inside."""
+    events = list(events)
+    last_out = latest(events, MOVED_OUTSIDE)
+    last_in = latest(events, BROUGHT_INSIDE)
+    current = latest(events, MOVED_OUTSIDE, BROUGHT_INSIDE)
+    if current is None or current.kind == BROUGHT_INSIDE:
+        return SunStatus(INSIDE, None, None, last_out, last_in)
+
+    bring_in_by = current.occurred_at + timedelta(hours=max_outside_hours)
+    state = OVERDUE_INSIDE if now > bring_in_by else OUTSIDE
+    return SunStatus(state, current, bring_in_by, last_out, last_in)
+
+
+def sun_event_error(
+    kind: str,
+    max_outside_hours: float,
+    events: Iterable[Event],
+    occurred_at: datetime,
+    now: datetime,
+) -> str | None:
+    """FR-016 and data-model.md recording rules. Returns a user-facing error, or None if valid."""
+    events = list(events)
+    sun = sun_status(max_outside_hours, events, now)
+    if kind == MOVED_OUTSIDE:
+        if sun.is_outside:
+            return "This plant is already outside. Bring it inside first."
+        last = latest(events, MOVED_OUTSIDE, BROUGHT_INSIDE)
+        if last is not None and occurred_at < last.occurred_at:
+            return "That time is earlier than when it was last brought inside."
+        return None
+    if kind == BROUGHT_INSIDE:
+        if not sun.is_outside:
+            return "This plant is already inside."
+        if occurred_at < sun.out_event.occurred_at:
+            return "A plant can't come inside before it went outside. Check the time."
+        return None
+    raise ValueError(f"not a sun event: {kind}")
+
+
 # --------------------------------------------------------------------------- dashboard (R17-R19)
 
 
@@ -106,7 +173,7 @@ class PlantStatus:
     name: str
     location: str
     watering: WateringStatus
-    sun: object | None = None  # SunStatus, added with User Story 3
+    sun: SunStatus | None = None
 
 
 # Dashboard groups in urgency order (FR-023, FR-024; research.md R-8)
@@ -155,14 +222,26 @@ def _watering_item(p: PlantStatus) -> tuple | None:
     return None
 
 
+def _sun_item(p: PlantStatus) -> tuple | None:
+    """(group, sort key within group) for a plant that is outside, or None."""
+    sun = p.sun
+    if sun is None or not sun.is_outside:
+        return None
+    group = G_OVERDUE_INSIDE if sun.state == OVERDUE_INSIDE else G_OUTSIDE
+    return group, (sun.bring_in_by, p.name.casefold(), p.id)
+
+
 def dashboard_items(plants: Iterable[PlantStatus]) -> list[DashboardItem]:
-    """One item per reason a plant needs attention, most urgent first."""
+    """One item per reason a plant needs attention, most urgent first.
+
+    A plant that is both thirsty and outside appears twice, once per action (research.md R-8).
+    """
     keyed = []
     for p in plants:
-        watering = _watering_item(p)
-        if watering:
-            group, key = watering
-            keyed.append((GROUP_ORDER.index(group), key, DashboardItem(group, p, ACTION_WATER)))
+        for found, action in ((_watering_item(p), ACTION_WATER), (_sun_item(p), ACTION_INSIDE)):
+            if found:
+                group, key = found
+                keyed.append((GROUP_ORDER.index(group), key, DashboardItem(group, p, action)))
     keyed.sort(key=lambda t: (t[0], t[1]))
     return [item for _, _, item in keyed]
 
