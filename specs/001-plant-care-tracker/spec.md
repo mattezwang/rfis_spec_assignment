@@ -19,6 +19,27 @@ forgotten and left out too long; (3) neither roommate can easily tell what the o
 what needs attention right now. Different plants need different watering frequencies and
 different amounts of time outside.
 
+## Clarifications
+
+### Session 2026-11-17
+
+Answers below are the recommended options, accepted by the project owner's instruction to
+proceed with defaults; they can be revisited.
+
+- Q: When should the app warn about a possible duplicate watering (initial spec R16 says
+  "recently brought outside", while the interview problem is "watered the same plant twice")?
+  → A: Warn when the plant has already been watered and its next watering is not yet due,
+  regardless of whether it is outside. R16's wording is treated as a slip; the intent is to
+  avoid double watering.
+- Q: Are "due today" and "overdue" based on calendar days or exact hours since the last
+  watering? → A: Calendar days in local time (watered any time Monday on a 1-day schedule means
+  due Tuesday, overdue Wednesday).
+- Q: How does the app know who the household members are? → A: An editable list of names. On
+  first use the app asks for at least one name; more can be added later. Names cannot be
+  deleted while they have care events, but can be renamed.
+- Q: Should plants that are outside but not yet overdue appear on the dashboard? → A: Yes, as
+  the least urgent group, showing their bring-inside time, so nobody forgets they are out.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Keep plants watered on their own schedules (Priority: P1)
@@ -155,6 +176,8 @@ and the bypass.
   recalculates its bring-inside time from the original move-outside time.
 - **Removing a plant**: a removed plant disappears from the dashboard and plant list; removal
   requires confirmation.
+- **First use**: with no household members, the app asks for names before showing the
+  dashboard.
 - **Invalid input**: empty names, a watering interval below 1 day, or an outside limit of zero or
   less are rejected with a clear message and nothing is saved.
 - **Duplicate plant names**: allowed (e.g. two "Pothos" in different rooms); the location tells
@@ -168,8 +191,10 @@ and the bypass.
 
 **Household members**
 
-- **FR-001**: The system MUST let the household maintain a list of member names (initially the
-  two roommates) and MUST require choosing a member whenever a care event is recorded.
+- **FR-001**: The system MUST let the household maintain a list of member names (add and
+  rename; delete only if the member has no care events). On first use, when no members exist,
+  the system MUST ask for at least one name before anything else. A member MUST be chosen
+  whenever a care event is recorded; the device MAY remember the last member chosen on it.
 - **FR-002**: The system MUST NOT require passwords or accounts.
 
 **Plants (G1)**
@@ -218,7 +243,8 @@ and the bypass.
   brought inside) newest first, each with the person and time. *(R15)*
 - **FR-020**: When a user tries to record a watering for a plant whose next watering is not yet
   due, the system MUST warn them, showing who last watered it and when, and MUST let them either
-  record it anyway or cancel. The check MUST use the latest saved data. *(R16; see Clarifications)*
+  record it anyway or cancel. The check MUST use the latest saved data. Whether the plant is
+  inside or outside does not affect this check. *(R16; see Clarifications)*
 - **FR-021**: Users MUST be able to delete a care event recorded by mistake; plant status MUST be
   recalculated.
 - **FR-022**: The system MUST NOT change any care state automatically; only recorded events change
@@ -281,6 +307,7 @@ and the bypass.
 
 - The household has two members to start; adding more names is allowed but there are no roles
   or permissions.
+- Care history is kept indefinitely; a two-person household produces a few events a day.
 - Both members are on the same home network; the app runs on one machine in the home and is
   opened in a browser.
 - No login is needed (from the initial spec); anyone who can reach the app can record care.

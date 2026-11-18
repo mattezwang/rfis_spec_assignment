@@ -40,3 +40,17 @@ Input:
   (simultaneous watering, back-dating, day boundaries), household members as an entity, removing
   plants and deleting mistaken events, measurable success criteria, and a Goal → R# → FR
   traceability table.
+
+## 4. `/speckit-clarify`
+
+Input: none (ran on the generated spec).
+
+Four questions, answered with the recommended option (see `## Clarifications` in spec.md):
+
+1. Duplicate-watering warning (R16) → warn when the plant is not yet due again; R16's
+   "recently brought outside" wording treated as a slip.
+2. Due/overdue → calendar days in local time.
+3. Household members → editable list, entered on first use.
+4. Outside-but-not-overdue plants → shown on the dashboard as the least urgent group.
+
+- Spec Quality Checklist: 16/16 → 16/16 passing.
