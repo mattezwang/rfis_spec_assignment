@@ -50,7 +50,7 @@ h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
 .nav a[aria-current="page"], .nav a:hover { background: var(--brand-dark); color: #fff; }
 
 .acting { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 0.9rem; flex-wrap: wrap; }
-.acting select { padding: 4px 6px; border-radius: 6px; border: 0; font-size: 0.9rem; }
+.acting select { width: auto; padding: 4px 6px; border-radius: 6px; border: 0; font-size: 0.9rem; }
 .acting .btn-ghost { color: #fff; border-color: #a9cbae; }
 
 /* ---------------------------------------------------------------- messages */
@@ -61,6 +61,7 @@ h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
 
 /* ---------------------------------------------------------------- cards & lists */
 
+.card > h2:first-child { margin-top: 0; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 10px 0; }
 .muted { color: var(--muted); }
 .small { font-size: 0.875rem; }

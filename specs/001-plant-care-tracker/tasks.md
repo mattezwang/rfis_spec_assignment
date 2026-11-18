@@ -156,10 +156,10 @@ scenarios 1–5).
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T032 [P] Write `README.md`: what it is, run steps, tests, environment variables, how to open from a phone, link to the spec artifacts
-- [ ] T033 [P] Write `docs/traceability.md`: interview statement → goal → initial R# → FR → task → code location → test
-- [ ] T034 Run the full test suite and fix failures
-- [ ] T035 Run quickstart.md manual scenarios in a real browser (desktop and 360 px phone width), fix issues, and record results in `docs/validation.md`
+- [X] T032 [P] Write `README.md`: what it is, run steps, tests, environment variables, how to open from a phone, link to the spec artifacts
+- [X] T033 [P] Write `docs/traceability.md`: interview statement → goal → initial R# → FR → task → code location → test
+- [X] T034 Run the full test suite and fix failures
+- [X] T035 Run quickstart.md manual scenarios in a real browser (desktop and 360 px phone width), fix issues, and record results in `docs/validation.md`
 
 ---
 

@@ -75,3 +75,29 @@ Input: none (generated from plan.md, spec.md, data-model.md, contracts/, researc
 - Artifact: `specs/001-plant-care-tracker/tasks.md`: 35 tasks in 7 phases (Setup, Foundational,
   US1–US4, Polish). Test tasks included because Constitution Principle V requires them.
 - Coverage check: every FR-001–FR-026 maps to at least one task.
+
+## 7. `/speckit-implement`
+
+Input: none (executed tasks.md phase by phase, tests first in each user story).
+
+| Phase | Tasks | Commit |
+|-------|-------|--------|
+| 1 Setup | T001–T003 | `impl: phase 1 setup` |
+| 2 Foundational | T004–T010 | `impl: phase 2 foundational` |
+| 3 US1 Watering (MVP) | T011–T016 | `impl: phase 3 user story 1` |
+| 4 US2 Dashboard | T017–T021 | `impl: phase 4 user story 2` |
+| 5 US3 Sunlight | T022–T026 | `impl: phase 5 user story 3` |
+| 6 US4 Coordination | T027–T031 | `impl: phase 6 user story 4` |
+| 7 Polish | T032–T035 | `impl: phase 7 polish` |
+
+Decisions made during implementation, each written back to the design docs:
+
+- Added `GET /choose-member` (contracts/routes.md) for actions taken before a device has picked
+  a member.
+- Added "Move a plant outside" to the dashboard so FR-025 (record plant movement from the
+  dashboard) holds even for plants that need no attention.
+- The check and the insert for care events run under a SQLite write lock, so the duplicate
+  warning and the FR-016 sequence rules hold when both roommates submit at once.
+
+Result: 35/35 tasks complete, 82 automated tests passing, 22/22 browser checks passing (see
+`docs/validation.md`).
