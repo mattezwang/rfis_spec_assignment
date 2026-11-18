@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% block head %}{% endblock %}
+  <title>{% block title %}Plant Care{% endblock %} · Plant Care Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="{{ url_for('web.dashboard') }}">🪴 Plant Care</a>
+      <nav class="nav">
+        <a href="{{ url_for('web.dashboard') }}" {% if request.endpoint == 'web.dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
+        {% if has_plants_page %}
+        <a href="{{ url_for('web.plants') }}" {% if request.endpoint and request.endpoint.startswith('web.plant') %}aria-current="page"{% endif %}>Plants</a>
+        {% endif %}
+        <a href="{{ url_for('web.members') }}" {% if request.endpoint == 'web.members' %}aria-current="page"{% endif %}>Household</a>
+      </nav>
+    </div>
+    {% if all_members %}
+    <form class="wrap acting" method="post" action="{{ url_for('web.set_acting_member') }}">
+      <input type="hidden" name="next" value="{{ request.full_path if request.method == 'GET' else url_for('web.dashboard') }}">
+      <label for="acting-select">Recording as</label>
+      <select id="acting-select" name="member_id">
+        {% if not acting_member %}<option value="" selected disabled>choose…</option>{% endif %}
+        {% for m in all_members %}
+        <option value="{{ m.id }}" {% if acting_member and acting_member.id == m.id %}selected{% endif %}>{{ m.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-small btn-ghost">Switch</button>
+    </form>
+    {% endif %}
+  </header>
+
+  <main class="wrap">
+    {% with messages = get_flashed_messages() %}
+      {% for message in messages %}
+      <p class="flash" role="status">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

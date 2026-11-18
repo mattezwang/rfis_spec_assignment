@@ -17,6 +17,7 @@ If no members exist, every route except `/setup` and `/static/*` redirects to `/
 | `POST /members` | Add member (`name`) | FR-001 |
 | `POST /members/<id>/rename` | Rename (`name`) | FR-001 |
 | `POST /members/<id>/delete` | Delete; 400 with message if member has care events | FR-001 |
+| `GET /choose-member` | "Who's recording?" page shown when an action has no member; buttons post to `/acting-member` (`next` preserved) | FR-001, R-5 |
 | `POST /acting-member` | Set the acting-member cookie (`member_id`, `next`) | FR-001, R-5 |
 
 ## Plants
@@ -36,7 +37,7 @@ If no members exist, every route except `/setup` and `/static/*` redirects to `/
 ## Care events
 
 Common form fields: `member_id` (optional; defaults to the acting-member cookie; if neither is
-present, redirect to choose a member and save nothing), `occurred_at` (optional
+present, redirect to `/choose-member` and save nothing), `occurred_at` (optional
 `datetime-local` in local time; default now; future rejected), `next` (where to redirect;
 must be a local path).
 

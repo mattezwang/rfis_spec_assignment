@@ -1,0 +1,139 @@
+:root {
+  --bg: #f6f7f3;
+  --surface: #ffffff;
+  --text: #1f2a1f;
+  --muted: #5d6b5d;
+  --border: #dfe4da;
+  --brand: #2f6b3a;
+  --brand-dark: #234f2b;
+
+  /* Dashboard urgency groups: each also has a text label, so color is never the only cue. */
+  --overdue-inside: #b42318;
+  --overdue-inside-bg: #fef3f2;
+  --overdue-water: #c4320a;
+  --overdue-water-bg: #fff4ed;
+  --never-watered: #a15c07;
+  --never-watered-bg: #fffaeb;
+  --due-today: #175cd3;
+  --due-today-bg: #eff8ff;
+  --outside: #0e7090;
+  --outside-bg: #ecfdff;
+  --ok: #2f6b3a;
+  --ok-bg: #edf7ee;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+a { color: var(--brand); }
+
+h1 { font-size: 1.5rem; margin: 1.25rem 0 0.75rem; }
+h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+
+/* ---------------------------------------------------------------- header */
+
+.site-header { background: var(--brand); color: #fff; padding: 8px 0; }
+.header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { color: #fff; font-weight: 700; text-decoration: none; font-size: 1.1rem; }
+.nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav a { color: #e6f2e7; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.nav a[aria-current="page"], .nav a:hover { background: var(--brand-dark); color: #fff; }
+
+.acting { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 0.9rem; flex-wrap: wrap; }
+.acting select { padding: 4px 6px; border-radius: 6px; border: 0; font-size: 0.9rem; }
+.acting .btn-ghost { color: #fff; border-color: #a9cbae; }
+
+/* ---------------------------------------------------------------- messages */
+
+.flash, .error { padding: 10px 12px; border-radius: 8px; margin: 12px 0; }
+.flash { background: var(--ok-bg); border: 1px solid #b7dcbc; }
+.error { background: var(--overdue-inside-bg); border: 1px solid #f5c2bd; color: var(--overdue-inside); }
+
+/* ---------------------------------------------------------------- cards & lists */
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 10px 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+
+.list { list-style: none; padding: 0; margin: 0; }
+
+.item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        background: var(--surface); border: 1px solid var(--border); border-left-width: 6px;
+        border-radius: 10px; padding: 12px 14px; margin: 8px 0; }
+.item-main { min-width: 0; }
+.item-title { font-weight: 600; overflow-wrap: anywhere; }
+.item-title a { color: inherit; text-decoration: none; }
+.item-title a:hover { text-decoration: underline; }
+.item-actions { flex-shrink: 0; display: flex; gap: 6px; }
+
+/* ---------------------------------------------------------------- badges */
+
+.badge { display: inline-block; font-size: 0.8rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.badge-overdue_inside { background: var(--overdue-inside-bg); color: var(--overdue-inside); }
+.badge-overdue_water { background: var(--overdue-water-bg); color: var(--overdue-water); }
+.badge-never_watered { background: var(--never-watered-bg); color: var(--never-watered); }
+.badge-due_today { background: var(--due-today-bg); color: var(--due-today); }
+.badge-outside { background: var(--outside-bg); color: var(--outside); }
+.badge-ok { background: var(--ok-bg); color: var(--ok); }
+
+.group-overdue_inside .item { border-left-color: var(--overdue-inside); }
+.group-overdue_water .item { border-left-color: var(--overdue-water); }
+.group-never_watered .item { border-left-color: var(--never-watered); }
+.group-due_today .item { border-left-color: var(--due-today); }
+.group-outside .item { border-left-color: var(--outside); }
+
+.group-heading { display: flex; align-items: center; gap: 8px; }
+.group-heading .count { color: var(--muted); font-weight: 400; }
+
+/* ---------------------------------------------------------------- forms & buttons */
+
+form.stack { display: grid; gap: 12px; }
+label { font-weight: 600; display: block; }
+.hint { font-weight: 400; color: var(--muted); font-size: 0.875rem; }
+input[type="text"], input[type="number"], input[type="datetime-local"], select {
+  width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; background: #fff;
+}
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+.row > * { flex: 1 1 140px; }
+.inline { display: inline; }
+
+.btn { display: inline-block; border: 1px solid var(--brand); background: var(--brand); color: #fff;
+       padding: 10px 16px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+       text-decoration: none; text-align: center; min-height: 44px; }
+.btn:hover { background: var(--brand-dark); }
+.btn-small { padding: 4px 10px; min-height: 32px; font-size: 0.875rem; }
+.btn-ghost { background: transparent; color: var(--brand); }
+.btn-ghost:hover { background: rgba(0, 0, 0, 0.06); }
+.btn-danger { background: var(--overdue-inside); border-color: var(--overdue-inside); }
+.btn-danger:hover { background: #8f1c13; }
+.btn-sun { background: var(--outside); border-color: var(--outside); }
+.btn-sun:hover { background: #0b5a73; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ---------------------------------------------------------------- tables */
+
+table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 10px; overflow: hidden; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+
+.empty { text-align: center; padding: 28px 16px; }
+
+@media (max-width: 480px) {
+  .item { flex-direction: column; align-items: stretch; }
+  .item-actions { justify-content: stretch; }
+  .item-actions form, .item-actions .btn { flex: 1; }
+  .item-actions .btn { width: 100%; }
+}

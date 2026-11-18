@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<h1>Welcome to Plant Care</h1>
+<p class="muted">Who looks after the plants? Everyone in the household sees the same plants and history, and each care entry records who did it.</p>
+<form class="card stack" method="post">
+  <div>
+    <label for="name1">Your name</label>
+    <input type="text" id="name1" name="name1" value="{{ names[0] }}" maxlength="40" required autofocus>
+  </div>
+  <div>
+    <label for="name2">Roommate's name <span class="hint">(optional, you can add people later)</span></label>
+    <input type="text" id="name2" name="name2" value="{{ names[1] }}" maxlength="40">
+  </div>
+  <div><button class="btn" type="submit">Get started</button></div>
+</form>
+{% endblock %}

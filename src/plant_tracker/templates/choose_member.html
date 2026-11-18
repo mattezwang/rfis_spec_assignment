@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Who are you?{% endblock %}
+{% block content %}
+<h1>Who's recording?</h1>
+<p class="muted">Pick your name so the household knows who did it. This device will remember it. Nothing was recorded yet: tap the action again after choosing.</p>
+<div class="actions">
+  {% for m in all_members %}
+  <form method="post" action="{{ url_for('web.set_acting_member') }}">
+    <input type="hidden" name="member_id" value="{{ m.id }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn" type="submit">I'm {{ m.name }}</button>
+  </form>
+  {% endfor %}
+</div>
+{% endblock %}

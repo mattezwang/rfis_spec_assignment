@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Household{% endblock %}
+{% block content %}
+<h1>Household</h1>
+<p class="muted">These are the people who can record plant care. No passwords: pick your name in the "Recording as" bar on your own device.</p>
+<ul class="list">
+  {% for m in all_members %}
+  <li class="card">
+    <form class="row" method="post" action="{{ url_for('web.rename_member', member_id=m.id) }}">
+      <div>
+        <label for="name-{{ m.id }}">Name <span class="hint">· {{ m.event_count }} care {{ 'entry' if m.event_count == 1 else 'entries' }}</span></label>
+        <input type="text" id="name-{{ m.id }}" name="name" value="{{ m.name }}" maxlength="40" required>
+      </div>
+      <div style="flex: 0 0 auto"><button class="btn btn-ghost" type="submit">Rename</button></div>
+    </form>
+    {% if m.event_count == 0 and all_members|length > 1 %}
+    <form method="post" action="{{ url_for('web.delete_member', member_id=m.id) }}" class="actions">
+      <button class="btn btn-small btn-ghost" type="submit">Remove {{ m.name }}</button>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+<h2>Add someone</h2>
+<form class="card row" method="post" action="{{ url_for('web.members') }}">
+  <div>
+    <label for="new-name">Name</label>
+    <input type="text" id="new-name" name="name" maxlength="40" required>
+  </div>
+  <div style="flex: 0 0 auto"><button class="btn" type="submit">Add</button></div>
+</form>
+{% endblock %}
