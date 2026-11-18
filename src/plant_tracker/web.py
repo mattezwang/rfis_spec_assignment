@@ -364,6 +364,15 @@ def water(plant_id: int):
             when = parse_occurred_at()
         except db.ValidationError as exc:
             return render_plant(plant_id, error=str(exc), status=400)
+        # FR-020: checked against the latest saved data, inside the write lock (research.md R-6)
+        if request.form.get("confirm") != "1" and care.needs_duplicate_warning(view.watering):
+            return render_template(
+                "confirm_water.html",
+                v=view,
+                member=member,
+                occurred_at=request.form.get("occurred_at", ""),
+                next=safe_next(detail_url),
+            )
         db.add_event(plant_id, member["id"], care.WATERED, when)
     flash(f"{member['name']} watered {view.plant['name']}.")
     return redirect(safe_next(detail_url))
@@ -402,3 +411,16 @@ def bring_inside(plant_id: int):
 @bp.app_errorhandler(404)
 def not_found(_exc):
     return render_template("not_found.html"), 404
+
+
+@bp.post("/events/<int:event_id>/delete")
+def delete_event(event_id: int):
+    """FR-021: delete a care entry recorded by mistake."""
+    event = db.get_event(event_id)
+    if event is None:
+        abort(404)
+    plant = db.get_plant(event["plant_id"])
+    db.delete_event(event_id)
+    label = care.EVENT_LABELS[event["kind"]].lower()
+    flash(f"Deleted the \"{label}\" entry by {event['member_name']} for {plant['name']}.")
+    return redirect(safe_next(url_for("web.plant_detail", plant_id=event["plant_id"])))

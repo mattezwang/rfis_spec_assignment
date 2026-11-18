@@ -141,14 +141,14 @@ scenarios 1–5).
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T027 [P] [US4] Unit tests for `needs_duplicate_warning()` in `tests/unit/test_care.py`: warns when ok, not when due today / overdue / never, unaffected by sun state
-- [ ] T028 [P] [US4] Integration tests in `tests/integration/test_us4_coordination.py`: two clients share state; warning page names last waterer; `confirm=1` records; cancel records nothing; warning still fires when the second client's page was stale; history newest first with member and action; delete event recalculates watering and sun status
+- [X] T027 [P] [US4] Unit tests for `needs_duplicate_warning()` in `tests/unit/test_care.py`: warns when ok, not when due today / overdue / never, unaffected by sun state
+- [X] T028 [P] [US4] Integration tests in `tests/integration/test_us4_coordination.py`: two clients share state; warning page names last waterer; `confirm=1` records; cancel records nothing; warning still fires when the second client's page was stale; history newest first with member and action; delete event recalculates watering and sun status
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Implement `needs_duplicate_warning(watering_status)` in `src/plant_tracker/care.py` and the warning flow in `POST /plants/<id>/water` in `src/plant_tracker/web.py` (re-read latest watering at submit time; return `confirm_water.html` with 200 unless `confirm=1`) (FR-020)
-- [ ] T030 [P] [US4] Create `src/plant_tracker/templates/confirm_water.html` (plant, last waterer, relative time, next due; Water anyway / Cancel)
-- [ ] T031 [US4] Add history query (all events for a plant, newest first, with member names) and event delete in `src/plant_tracker/db.py`; route `POST /events/<id>/delete` in `src/plant_tracker/web.py`; history table with delete buttons in `plant_detail.html` (FR-019, FR-021)
+- [X] T029 [US4] Implement `needs_duplicate_warning(watering_status)` in `src/plant_tracker/care.py` and the warning flow in `POST /plants/<id>/water` in `src/plant_tracker/web.py` (re-read latest watering at submit time; return `confirm_water.html` with 200 unless `confirm=1`) (FR-020)
+- [X] T030 [P] [US4] Create `src/plant_tracker/templates/confirm_water.html` (plant, last waterer, relative time, next due; Water anyway / Cancel)
+- [X] T031 [US4] Add history query (all events for a plant, newest first, with member names) and event delete in `src/plant_tracker/db.py`; route `POST /events/<id>/delete` in `src/plant_tracker/web.py`; history table with delete buttons in `plant_detail.html` (FR-019, FR-021)
 
 **Checkpoint**: All user stories work independently.
 

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% set w = v.watering %}
+{% block title %}Already watered{% endblock %}
+{% block content %}
+<h1>Already watered</h1>
+<div class="card warning" role="alert">
+  <p><strong>{{ v.plant.name }}</strong> was already watered by <strong>{{ w.last.member_name }}</strong> {{ fmt_when(w.last.occurred_at) }}.</p>
+  <p>Next watering is due {{ fmt_date(w.next_due) }} (in {{ plural(w.days_until_due, 'day') }}). Watering again now might be too much.</p>
+</div>
+<form class="actions" method="post" action="{{ url_for('web.water', plant_id=v.id) }}">
+  <input type="hidden" name="member_id" value="{{ member.id }}">
+  <input type="hidden" name="occurred_at" value="{{ occurred_at }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <input type="hidden" name="confirm" value="1">
+  <button class="btn" type="submit">💧 Water anyway (as {{ member.name }})</button>
+  <a class="btn btn-ghost" href="{{ next }}">Cancel</a>
+</form>
+{% endblock %}

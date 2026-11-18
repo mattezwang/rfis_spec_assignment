@@ -95,6 +95,14 @@ def watering_status(
     return WateringStatus(OK, last, next_due, days_until_due=(next_due - today).days)
 
 
+def needs_duplicate_warning(watering: WateringStatus) -> bool:
+    """FR-020: warn before watering a plant that was already watered and isn't due yet.
+
+    Sun state is deliberately ignored (spec Clarifications, R16).
+    """
+    return watering.state == OK
+
+
 # --------------------------------------------------------------------------- sunlight (G3)
 
 # Sun states

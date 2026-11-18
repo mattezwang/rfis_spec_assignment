@@ -67,5 +67,32 @@
   </form>
 </section>
 
+<section aria-labelledby="history-h">
+  <h2 id="history-h">Care history</h2>
+  {% if v.events %}
+  <table>
+    <thead><tr><th>What</th><th>Who</th><th>When</th><th><span class="sr-only">Delete</span></th></tr></thead>
+    <tbody>
+      {% for e in v.events %}
+      <tr>
+        <td>{{ e.label }}</td>
+        <td>{{ e.member_name }}</td>
+        <td>{{ fmt_when(e.occurred_at) }}</td>
+        <td>
+          <form class="inline" method="post" action="{{ url_for('web.delete_event', event_id=e.id) }}"
+                onsubmit="return confirm('Delete this entry? Use this only for mistakes.');">
+            <input type="hidden" name="next" value="{{ url_for('web.plant_detail', plant_id=p.id) }}">
+            <button class="btn btn-small btn-ghost" type="submit" title="Delete this entry" aria-label="Delete {{ e.label|lower }} by {{ e.member_name }}, {{ fmt_when(e.occurred_at) }}">✕</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Nothing recorded yet.</p>
+  {% endif %}
+</section>
+
 <p class="actions"><a class="btn btn-small btn-ghost" href="{{ url_for('web.delete_plant', plant_id=p.id) }}">Remove plant…</a></p>
 {% endblock %}

@@ -265,3 +265,20 @@ class TestSunDashboard:
             status(2, "B-sooner", 7, b, now, sun=care.sun_status(1, b, now)),
         ]
         assert [i.plant.name for i in care.dashboard_items(plants)] == ["B-sooner", "A-later"]
+
+
+# --------------------------------------------------------------------------- US4 coordination
+
+
+class TestDuplicateWarning:
+    def test_warns_only_when_not_yet_due(self):
+        now = at(2026, 11, 20)
+        assert care.needs_duplicate_warning(care.watering_status(7, [watered(at(2026, 11, 19))], now, NY))
+        assert not care.needs_duplicate_warning(care.watering_status(7, [], now, NY))
+        assert not care.needs_duplicate_warning(care.watering_status(7, [watered(at(2026, 11, 13))], now, NY))
+        assert not care.needs_duplicate_warning(care.watering_status(7, [watered(at(2026, 11, 1))], now, NY))
+
+    def test_unaffected_by_sun_state(self):
+        now = at(2026, 11, 20, 12)
+        events = [watered(at(2026, 11, 20, 8)), ev(care.MOVED_OUTSIDE, at(2026, 11, 20, 11))]
+        assert care.needs_duplicate_warning(care.watering_status(7, events, now, NY))

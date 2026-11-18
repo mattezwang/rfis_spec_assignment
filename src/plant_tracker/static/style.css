@@ -137,3 +137,7 @@ th { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
   .item-actions form, .item-actions .btn { flex: 1; }
   .item-actions .btn { width: 100%; }
 }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+.warning { border-left: 6px solid var(--never-watered); background: var(--never-watered-bg); }

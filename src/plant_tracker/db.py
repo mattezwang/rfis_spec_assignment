@@ -285,3 +285,18 @@ def events_by_plant(plant_ids: list[int] | None = None) -> dict[int, list]:
             )
         )
     return grouped
+
+
+def get_event(event_id: int):
+    return get_db().execute(
+        """SELECT e.*, m.name AS member_name FROM care_event e
+           JOIN member m ON m.id = e.member_id WHERE e.id = ?""",
+        (event_id,),
+    ).fetchone()
+
+
+def delete_event(event_id: int) -> None:
+    """FR-021: remove a mistaken entry. Status is derived, so it recalculates automatically."""
+    conn = get_db()
+    conn.execute("DELETE FROM care_event WHERE id = ?", (event_id,))
+    conn.commit()

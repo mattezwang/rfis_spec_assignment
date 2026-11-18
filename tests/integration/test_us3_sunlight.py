@@ -99,8 +99,8 @@ def test_dashboard_sun_groups_and_bring_inside_button(household, clock):
     thirsty = add_plant(household, "Thirsty", interval=1)
     for pid in (late, sunny, thirsty):
         household.post(f"/plants/{pid}/water", data={"occurred_at": "2026-11-08T08:00"})
-    household.post(f"/plants/{sunny}/water", data={})
-    household.post(f"/plants/{late}/water", data={})
+    household.post(f"/plants/{sunny}/water", data={"confirm": "1"})
+    household.post(f"/plants/{late}/water", data={"confirm": "1"})
     outside(household, late)
     outside(household, sunny)
 
