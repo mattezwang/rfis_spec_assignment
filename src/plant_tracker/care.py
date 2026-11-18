@@ -93,3 +93,93 @@ def watering_status(
     if today == next_due:
         return WateringStatus(DUE_TODAY, last, next_due)
     return WateringStatus(OK, last, next_due, days_until_due=(next_due - today).days)
+
+
+# --------------------------------------------------------------------------- dashboard (R17-R19)
+
+
+@dataclass(frozen=True)
+class PlantStatus:
+    """Everything the dashboard needs to know about one plant."""
+
+    id: int
+    name: str
+    location: str
+    watering: WateringStatus
+    sun: object | None = None  # SunStatus, added with User Story 3
+
+
+# Dashboard groups in urgency order (FR-023, FR-024; research.md R-8)
+G_OVERDUE_INSIDE = "overdue_inside"
+G_OVERDUE_WATER = "overdue_water"
+G_NEVER_WATERED = "never_watered"
+G_DUE_TODAY = "due_today"
+G_OUTSIDE = "outside"
+
+GROUP_ORDER = (G_OVERDUE_INSIDE, G_OVERDUE_WATER, G_NEVER_WATERED, G_DUE_TODAY, G_OUTSIDE)
+GROUP_TITLES = {
+    G_OVERDUE_INSIDE: "Overdue to bring inside",
+    G_OVERDUE_WATER: "Overdue for water",
+    G_NEVER_WATERED: "Never watered",
+    G_DUE_TODAY: "Due for water today",
+    G_OUTSIDE: "Outside now",
+}
+
+ACTION_WATER = "water"
+ACTION_INSIDE = "inside"
+
+
+@dataclass(frozen=True)
+class DashboardItem:
+    group: str
+    plant: PlantStatus
+    action: str
+
+
+@dataclass(frozen=True)
+class Group:
+    key: str
+    title: str
+    items: list
+
+
+def _watering_item(p: PlantStatus) -> tuple | None:
+    """(group, sort key within group) for a plant's watering, or None if it needs nothing."""
+    w = p.watering
+    if w.state == OVERDUE:
+        return G_OVERDUE_WATER, (-w.days_overdue, p.name.casefold(), p.id)
+    if w.state == NEVER:
+        return G_NEVER_WATERED, (p.name.casefold(), p.id)
+    if w.state == DUE_TODAY:
+        return G_DUE_TODAY, (p.name.casefold(), p.id)
+    return None
+
+
+def dashboard_items(plants: Iterable[PlantStatus]) -> list[DashboardItem]:
+    """One item per reason a plant needs attention, most urgent first."""
+    keyed = []
+    for p in plants:
+        watering = _watering_item(p)
+        if watering:
+            group, key = watering
+            keyed.append((GROUP_ORDER.index(group), key, DashboardItem(group, p, ACTION_WATER)))
+    keyed.sort(key=lambda t: (t[0], t[1]))
+    return [item for _, _, item in keyed]
+
+
+def group_items(items: list[DashboardItem]) -> list[Group]:
+    """Split ordered items into non-empty groups, keeping urgency order."""
+    groups = []
+    for key in GROUP_ORDER:
+        members = [i for i in items if i.group == key]
+        if members:
+            groups.append(Group(key, GROUP_TITLES[key], members))
+    return groups
+
+
+def next_upcoming(plants: Iterable[PlantStatus]) -> PlantStatus | None:
+    """The plant whose next watering comes soonest (for the empty dashboard, FR-026)."""
+    upcoming = [p for p in plants if p.watering.state == OK]
+    if not upcoming:
+        return None
+    return min(upcoming, key=lambda p: (p.watering.next_due, p.name.casefold()))

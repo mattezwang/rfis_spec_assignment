@@ -199,11 +199,15 @@ class PlantView:
 
     plant: object
     events: list
-    watering: care.WateringStatus
+    status: care.PlantStatus
 
     @property
     def id(self) -> int:
         return self.plant["id"]
+
+    @property
+    def watering(self) -> care.WateringStatus:
+        return self.status.watering
 
 
 def build_views(plants) -> list[PlantView]:
@@ -212,13 +216,13 @@ def build_views(plants) -> list[PlantView]:
     views = []
     for p in plants:
         evs = events.get(p["id"], [])
-        views.append(
-            PlantView(
-                plant=p,
-                events=evs,
-                watering=care.watering_status(p["water_interval_days"], evs, current, zone),
-            )
+        status = care.PlantStatus(
+            id=p["id"],
+            name=p["name"],
+            location=p["location"],
+            watering=care.watering_status(p["water_interval_days"], evs, current, zone),
         )
+        views.append(PlantView(plant=p, events=evs, status=status))
     return views
 
 
@@ -262,7 +266,16 @@ def member_or_choose(default_next: str):
 
 @bp.get("/")
 def dashboard():
-    return render_template("dashboard.html")
+    """FR-023-FR-026: what needs attention, most urgent first, with one-tap actions."""
+    views = build_views(db.list_plants())
+    statuses = [v.status for v in views]
+    groups = care.group_items(care.dashboard_items(statuses))
+    return render_template(
+        "dashboard.html",
+        groups=groups,
+        plant_count=len(views),
+        upcoming=care.next_upcoming(statuses),
+    )
 
 
 # --------------------------------------------------------------------------- plants (US1)

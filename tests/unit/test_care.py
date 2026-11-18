@@ -86,3 +86,63 @@ class TestWateringStatus:
             care.watering_status(7, [watered(at(2026, 11, 9))], today, NY).label
             == "Water in 6 days"
         )
+
+
+# --------------------------------------------------------------------------- US2 dashboard
+
+
+def status(id, name, interval, events, now, sun=None):
+    return care.PlantStatus(
+        id=id,
+        name=name,
+        location="Somewhere",
+        watering=care.watering_status(interval, events, now, NY),
+        sun=sun,
+    )
+
+
+class TestDashboard:
+    def setup_method(self):
+        self.now = at(2026, 11, 20)
+
+    def test_groups_in_urgency_order_and_ok_excluded(self):
+        n = self.now
+        plants = [
+            status(1, "Due", 7, [watered(at(2026, 11, 13))], n),
+            status(2, "Fine", 7, [watered(at(2026, 11, 19))], n),
+            status(3, "New", 7, [], n),
+            status(4, "Late", 7, [watered(at(2026, 11, 10))], n),
+        ]
+        items = care.dashboard_items(plants)
+        assert [(i.group, i.plant.name) for i in items] == [
+            (care.G_OVERDUE_WATER, "Late"),
+            (care.G_NEVER_WATERED, "New"),
+            (care.G_DUE_TODAY, "Due"),
+        ]
+
+    def test_most_overdue_first_then_name(self):
+        n = self.now
+        plants = [
+            status(1, "b-one-day", 7, [watered(at(2026, 11, 12))], n),
+            status(2, "z-five-days", 7, [watered(at(2026, 11, 8))], n),
+            status(3, "a-one-day", 7, [watered(at(2026, 11, 12))], n),
+        ]
+        names = [i.plant.name for i in care.dashboard_items(plants)]
+        assert names == ["z-five-days", "a-one-day", "b-one-day"]
+
+    def test_grouping_helper_keeps_order_and_skips_empty(self):
+        n = self.now
+        plants = [status(1, "New", 7, [], n), status(2, "Due", 7, [watered(at(2026, 11, 13))], n)]
+        groups = care.group_items(care.dashboard_items(plants))
+        assert [g.key for g in groups] == [care.G_NEVER_WATERED, care.G_DUE_TODAY]
+        assert groups[0].title == "Never watered"
+
+    def test_next_upcoming(self):
+        n = self.now
+        plants = [
+            status(1, "Later", 7, [watered(at(2026, 11, 19))], n),
+            status(2, "Sooner", 3, [watered(at(2026, 11, 19))], n),
+        ]
+        assert care.dashboard_items(plants) == []
+        assert care.next_upcoming(plants).name == "Sooner"
+        assert care.next_upcoming([]) is None

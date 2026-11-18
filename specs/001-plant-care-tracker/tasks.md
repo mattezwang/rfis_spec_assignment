@@ -92,14 +92,14 @@ verify order, distinct labels, one-tap watering, and the empty state (spec US2 s
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T017 [P] [US2] Unit tests for `dashboard_items()` in `tests/unit/test_care.py`: group order, within-group ordering (most overdue first, then name), ok plants excluded, empty-state next upcoming due
-- [ ] T018 [P] [US2] Integration tests in `tests/integration/test_us2_dashboard.py`: order in rendered HTML, text badges present, Water button on dashboard records with acting member and redirects back to `/`, no acting member → redirected to choose and nothing saved, empty state text, meta refresh present
+- [X] T017 [P] [US2] Unit tests for `dashboard_items()` in `tests/unit/test_care.py`: group order, within-group ordering (most overdue first, then name), ok plants excluded, empty-state next upcoming due
+- [X] T018 [P] [US2] Integration tests in `tests/integration/test_us2_dashboard.py`: order in rendered HTML, text badges present, Water button on dashboard records with acting member and redirects back to `/`, no acting member → redirected to choose and nothing saved, empty state text, meta refresh present
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Implement `DashboardItem`, group constants, and `dashboard_items(plants_with_status)` plus `next_upcoming()` in `src/plant_tracker/care.py` per data-model.md "DashboardItem" (watering groups now; sun groups added in US3)
-- [ ] T020 [US2] Implement `GET /` in `src/plant_tracker/web.py`: load plants with latest events, compute statuses, build items
-- [ ] T021 [US2] Create `src/plant_tracker/templates/dashboard.html`: grouped sections with heading, color, badge, one action button per item posting with `next=/`, empty state, `<meta http-equiv="refresh" content="60">`
+- [X] T019 [US2] Implement `DashboardItem`, group constants, and `dashboard_items(plants_with_status)` plus `next_upcoming()` in `src/plant_tracker/care.py` per data-model.md "DashboardItem" (watering groups now; sun groups added in US3)
+- [X] T020 [US2] Implement `GET /` in `src/plant_tracker/web.py`: load plants with latest events, compute statuses, build items
+- [X] T021 [US2] Create `src/plant_tracker/templates/dashboard.html`: grouped sections with heading, color, badge, one action button per item posting with `next=/`, empty state, `<meta http-equiv="refresh" content="60">`
 
 **Checkpoint**: US1 and US2 both work.
 

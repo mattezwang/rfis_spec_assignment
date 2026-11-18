@@ -1,6 +1,56 @@
 {% extends "base.html" %}
+{% block head %}<meta http-equiv="refresh" content="60">{% endblock %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <h1>What needs attention</h1>
-<div class="card empty"><p>No plants yet.</p></div>
+
+{% if plant_count == 0 %}
+<div class="card empty">
+  <p>No plants yet.</p>
+  <a class="btn" href="{{ url_for('web.new_plant') }}">Add your first plant</a>
+</div>
+{% elif not groups %}
+<div class="card empty">
+  <p><strong>All plants are taken care of.</strong> 🌿</p>
+  {% if upcoming %}
+  <p class="muted">Next watering: <a href="{{ url_for('web.plant_detail', plant_id=upcoming.id) }}">{{ upcoming.name }}</a> {{ fmt_date(upcoming.watering.next_due) }}.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% for group in groups %}
+<section class="group group-{{ group.key }}" aria-labelledby="g-{{ group.key }}">
+  <h2 class="group-heading" id="g-{{ group.key }}">{{ group.title }} <span class="count">({{ group.items|length }})</span></h2>
+  <ul class="list">
+    {% for item in group.items %}
+    {% set p = item.plant %}
+    <li class="item">
+      <div class="item-main">
+        <div class="item-title"><a href="{{ url_for('web.plant_detail', plant_id=p.id) }}">{{ p.name }}</a></div>
+        <div class="muted small">{{ p.location }}</div>
+        <div class="small">
+          {% if item.action == 'water' %}
+            <span class="badge badge-{{ group.key }}">{{ p.watering.label }}</span>
+            {% if p.watering.last %}<span class="muted">Last watered {{ fmt_when(p.watering.last.occurred_at) }} by {{ p.watering.last.member_name }}</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="item-actions">
+        {% if item.action == 'water' %}
+        <form method="post" action="{{ url_for('web.water', plant_id=p.id) }}">
+          <input type="hidden" name="next" value="/">
+          <button class="btn" type="submit">💧 Water</button>
+        </form>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
+{% if plant_count %}
+<p class="muted small">Recording as <strong>{{ acting_member.name if acting_member else 'nobody yet' }}</strong>. This page refreshes every minute so you see your roommate's updates.
+  <a href="{{ url_for('web.plants') }}">All plants</a></p>
+{% endif %}
 {% endblock %}
